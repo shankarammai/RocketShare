@@ -5,9 +5,15 @@
 	export let self = false;
 	let myself = self ? "myself" : "";
 	export let showSendModal = false;
+	export let friendPeerId = '';
+
+	function handleClickedUser(){
+		showSendModal = !showSendModal;
+		friendPeerId = peerId;
+	}
 </script>
 
-<div class="centerText" class:myself on:click={()=>showSendModal = !showSendModal}>
+<div class="centerText" class:myself on:click={handleClickedUser}>
 	<img src={"https://robohash.org/" + userName + "?size=150x150&set=set4"} />
 	<hgroup>
 		<p><strong>{userName}</strong></p>

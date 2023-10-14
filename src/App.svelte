@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount, onDestroy } from "svelte";
+	import { onMount, onDestroy, setContext } from "svelte";
 	import NavBar from "./lib/NavBar.svelte";
 	import { database } from "./Firebase";
 	import User from "./lib/User.svelte";
@@ -15,8 +15,9 @@
 	import { generateRandomName } from "./Names";
 	import { getBrowserName } from "./BrowserAgent";
 	import SendDataModal from "./lib/SendDataModal.svelte";
+	import ReceiveDataModal from "./lib/ReceiveDataModal.svelte";
 
-	let myNanoId = nanoid(8);
+	let myNanoId = nanoid(10);
 	let myPublicIP = "";
 	let myPeer: Peer = new Peer(myNanoId);
 	let myName = generateRandomName();
@@ -24,25 +25,75 @@
 	let otherInNetwork: Record<string, StoredDataItem> = {};
 	let myBrowser = getBrowserName();
 	let showSendModal: boolean = false;
+	let showReceiveModal: boolean = false;
+	let friendPeerId: string = "";
+	let receivedFiles: Array<any> = [];
+	let currentReceivingFile: Array<any> = [];
+
+
+	let currentReceivingFileDetails: FileDetails = {};
+
+	setContext("peerFunctions", { sendData });
 
 	//send
-	function sendData(peerId: string) {
-		let conn = myPeer.connect(peerId);
+	function sendData(files: FileList) {
+		for (const file of files) {
+			console.log(`${file.name}: ${file.size} bytes`);
+		}
+		console.log(friendPeerId);
+		console.log(myPeer);
+		console.log(files);
+		let conn = myPeer.connect(friendPeerId);
 		conn.on("open", function () {
+			console.log("connection open");
 			// Receive messages
 			conn.on("data", function (data) {
+				showReceiveModal = true;
 				console.log("Received", data);
 			});
-
-			// Send messages
-			conn.send("Hello!");
+			let file: File = files[0];
+			file.arrayBuffer().then((buffer) => {
+				const sendInitialData = {
+					type: file.type,
+					name: file.name,
+					Totalsize: file.size,
+					sendType: "sendStart",
+				};
+				conn.send(sendInitialData);
+				const chunkSize = 16 * 1024;
+				// Keep chunking, and sending the chunks to the other peer
+				while (buffer.byteLength) {
+					const chunk = buffer.slice(0, chunkSize);
+					buffer = buffer.slice(chunkSize, buffer.byteLength);
+					// Off goes the chunk!
+					conn.send(chunk);
+				}
+				// End message to signal that all chunks have been sent
+				conn.send({sendType:"sendDone"});
+			});
 		});
 	}
 
 	//receive
 	myPeer.on("connection", function (conn) {
-		conn.on("data", (data) => {
+		conn.on("data", (data: any) => {
 			console.log("data received");
+			console.log(data);
+			if (data instanceof Uint8Array) {
+				currentReceivingFile.push(data);
+			} else {
+				if (data.sendType === "sendDone") {
+					let myFile = new Blob(currentReceivingFile, {
+						type: currentReceivingFileDetails.type
+					});
+					receivedFiles = [myFile];
+					receivedFiles = receivedFiles;
+					showReceiveModal = true;
+				} else {
+					currentReceivingFileDetails = data;
+				}
+			}
+			console.log(typeof data);
 		});
 	});
 
@@ -59,7 +110,6 @@
 			addData({ id: myNanoId, name: myName, agent: myBrowser });
 			const collectionRef = collection(database, myPublicIP);
 			const unsuscribe = onSnapshot(collectionRef, (snapshot) => {
-				// otherInNetwork= snapshot.docs.map((doc)=>doc.data());
 				snapshot.docChanges().forEach((change) => {
 					const docId = change.doc.id;
 					const docData = change.doc.data();
@@ -121,6 +171,7 @@
 			{#each Object.entries(otherInNetwork) as [title, data]}
 				{#if title != myDocRefId}
 					<User
+						bind:friendPeerId
 						bind:showSendModal
 						userName={data["name"]}
 						userAgent={data["agent"]}
@@ -133,6 +184,10 @@
 	<User self={true} userName={myName} userAgent={myBrowser} />
 	{#if showSendModal}
 		<SendDataModal bind:show={showSendModal} />
+	{/if}
+
+	{#if showReceiveModal}
+		<ReceiveDataModal bind:showReceiveModal bind:receivedFiles />
 	{/if}
 </main>
 
