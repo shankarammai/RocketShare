@@ -86,14 +86,15 @@
 					let myFile = new Blob(currentReceivingFile, {
 						type: currentReceivingFileDetails.type
 					});
+					//Todo add many files, type should be be FileWithData
 					receivedFiles = [myFile];
 					receivedFiles = receivedFiles;
+					currentReceivingFile = [];
 					showReceiveModal = true;
 				} else {
 					currentReceivingFileDetails = data;
 				}
 			}
-			console.log(typeof data);
 		});
 	});
 
