@@ -27,16 +27,16 @@
 	let showSendModal: boolean = false;
 	let showReceiveModal: boolean = false;
 	let friendPeerId: string = "";
-	let receivedFiles: Array<any> = [];
+	let receivedFiles: Array<FileDetailsWithData> = [];
 	let currentReceivingFile: Array<any> = [];
-
-
 	let currentReceivingFileDetails: FileDetails = {};
+	let isSending: boolean = false;
 
 	setContext("peerFunctions", { sendData });
 
 	//send
 	function sendData(files: FileList) {
+		isSending = true;
 		for (const file of files) {
 			console.log(`${file.name}: ${file.size} bytes`);
 		}
@@ -69,9 +69,10 @@
 					conn.send(chunk);
 				}
 				// End message to signal that all chunks have been sent
-				conn.send({sendType:"sendDone"});
+				conn.send({ sendType: "sendDone" });
 			});
 		});
+		isSending = false;
 	}
 
 	//receive
@@ -84,14 +85,22 @@
 			} else {
 				if (data.sendType === "sendDone") {
 					let myFile = new Blob(currentReceivingFile, {
-						type: currentReceivingFileDetails.type
+						type: currentReceivingFileDetails.type,
 					});
+					let fileAndDetails: FileDetailsWithData = {
+						name: currentReceivingFileDetails.name ?? "Unknown",
+						type: currentReceivingFileDetails.type ?? "type",
+						blob: myFile,
+					};
+					console.log("line 92", currentReceivingFileDetails);
 					//Todo add many files, type should be be FileWithData
-					receivedFiles = [myFile];
-					receivedFiles = receivedFiles;
+					// receivedFiles = [fileAndDetails];
+					receivedFiles = [fileAndDetails];
 					currentReceivingFile = [];
+					currentReceivingFileDetails = {};
+				}
+				if (data.sendType === "sendStart") {
 					showReceiveModal = true;
-				} else {
 					currentReceivingFileDetails = data;
 				}
 			}
@@ -184,11 +193,15 @@
 	</div>
 	<User self={true} userName={myName} userAgent={myBrowser} />
 	{#if showSendModal}
-		<SendDataModal bind:show={showSendModal} />
+		<SendDataModal bind:show={showSendModal} bind:isSending={isSending} />
 	{/if}
 
 	{#if showReceiveModal}
-		<ReceiveDataModal bind:showReceiveModal bind:receivedFiles />
+		<ReceiveDataModal
+			bind:showReceiveModal
+			bind:receivedFiles
+			bind:receivingFileDetails={currentReceivingFileDetails}
+		/>
 	{/if}
 </main>
 

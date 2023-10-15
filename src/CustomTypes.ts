@@ -6,12 +6,13 @@ interface StoredDataItem {
 
 interface FileDetails {
     type?:string,
-    agent?:string,
-    sendType?:string
+    name?:string,
+    sendType?:string,
+    Totalsize?: number
 }
 
-interface FileWithData {
-    type?: string,
-    name?: string,
-    blob?: Blob
+interface FileDetailsWithData {
+    type: string,
+    name: string,
+    blob: Blob
 }
