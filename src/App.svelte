@@ -37,12 +37,6 @@
 	//send
 	function sendData(files: FileList) {
 		isSending = true;
-		for (const file of files) {
-			console.log(`${file.name}: ${file.size} bytes`);
-		}
-		console.log(friendPeerId);
-		console.log(myPeer);
-		console.log(files);
 		let conn = myPeer.connect(friendPeerId);
 		conn.on("open", function () {
 			console.log("connection open");
@@ -51,26 +45,28 @@
 				showReceiveModal = true;
 				console.log("Received", data);
 			});
-			let file: File = files[0];
-			file.arrayBuffer().then((buffer) => {
-				const sendInitialData = {
-					type: file.type,
-					name: file.name,
-					Totalsize: file.size,
-					sendType: "sendStart",
-				};
-				conn.send(sendInitialData);
-				const chunkSize = 16 * 1024;
-				// Keep chunking, and sending the chunks to the other peer
-				while (buffer.byteLength) {
-					const chunk = buffer.slice(0, chunkSize);
-					buffer = buffer.slice(chunkSize, buffer.byteLength);
-					// Off goes the chunk!
-					conn.send(chunk);
-				}
-				// End message to signal that all chunks have been sent
-				conn.send({ sendType: "sendDone" });
-			});
+			for (const file of files) {
+				console.log(`${file.name}: ${file.size} bytes`);
+				file.arrayBuffer().then((buffer) => {
+					const sendInitialData = {
+						type: file.type,
+						name: file.name,
+						Totalsize: file.size,
+						sendType: "sendStart",
+					};
+					conn.send(sendInitialData);
+					const chunkSize = 16 * 1024;
+					// Keep chunking, and sending the chunks to the other peer
+					while (buffer.byteLength) {
+						const chunk = buffer.slice(0, chunkSize);
+						buffer = buffer.slice(chunkSize, buffer.byteLength);
+						// Send the chunk!
+						conn.send(chunk);
+					}
+					// Send end message
+					conn.send({ sendType: "sendDone" });
+				});
+			}
 		});
 		isSending = false;
 	}
@@ -78,8 +74,6 @@
 	//receive
 	myPeer.on("connection", function (conn) {
 		conn.on("data", (data: any) => {
-			console.log("data received");
-			console.log(data);
 			if (data instanceof Uint8Array) {
 				currentReceivingFile.push(data);
 			} else {
@@ -92,10 +86,9 @@
 						type: currentReceivingFileDetails.type ?? "type",
 						blob: myFile,
 					};
-					console.log("line 92", currentReceivingFileDetails);
-					//Todo add many files, type should be be FileWithData
-					// receivedFiles = [fileAndDetails];
-					receivedFiles = [fileAndDetails];
+					console.log(fileAndDetails);
+					let newReceivedFiles = [...receivedFiles, ...[fileAndDetails]];
+					receivedFiles = newReceivedFiles;
 					currentReceivingFile = [];
 					currentReceivingFileDetails = {};
 				}
@@ -124,25 +117,18 @@
 					const docId = change.doc.id;
 					const docData = change.doc.data();
 					if (change.type === "added") {
-						// Document added
-						console.log("New document:", change.doc.data());
 						otherInNetwork[docId] = docData as StoredDataItem;
 						otherInNetwork = otherInNetwork;
 					}
 					if (change.type === "modified") {
-						// Document modified
-						console.log("Modified document:", change.doc.data());
 						otherInNetwork[docId] = docData as StoredDataItem;
 						otherInNetwork = otherInNetwork;
 					}
 					if (change.type === "removed") {
-						// Document removed
-						console.log("Removed document:", change.doc.data());
 						let newOtherInNetwork = { ...otherInNetwork };
 						delete newOtherInNetwork[docId];
 						otherInNetwork = newOtherInNetwork;
 					}
-					console.log(otherInNetwork);
 				});
 			});
 		}
@@ -193,7 +179,7 @@
 	</div>
 	<User self={true} userName={myName} userAgent={myBrowser} />
 	{#if showSendModal}
-		<SendDataModal bind:show={showSendModal} bind:isSending={isSending} />
+		<SendDataModal bind:show={showSendModal} bind:isSending />
 	{/if}
 
 	{#if showReceiveModal}

@@ -4,9 +4,10 @@
 	export let receivingFileDetails: FileDetails = {};
 	let dialog: HTMLDialogElement;
 
+	console.log(receivedFiles);
+
 	function closeModal() {
 		dialog.close();
-		receivedFiles = [];
 		showReceiveModal = false;
 	}
 	function downloadFiles() {
@@ -14,7 +15,6 @@
 			alert("Files Not received");
 			return;
 		}
-
 		receivedFiles.forEach((file) => {
 			downloadBlob(file.blob, file.name);
 		});
@@ -36,26 +36,28 @@
 <dialog bind:this={dialog} open>
 	<article>
 		<h2>Received files</h2>
-		{#each receivedFiles as file}
-			{#if file.type.indexOf("image") > -1}
-				<img
-					src={URL.createObjectURL(file.blob)}
-					alt="img"
-					width="100px"
-					height="100px"
-				/>
-			{:else}
-				<div class="file-icon">
-					<p class="file-name">{file.name}</p>
+		<div class="filesDiv">
+			{#each receivedFiles as file}
+				{#if file.type.indexOf("image") > -1}
+					<img
+          class="receivedFile"
+						src={URL.createObjectURL(file.blob)}
+						alt="img"
+						width="150px"
+						height="120px"
+					/>
+				{:else}
+					<div class="file-icon">
+						<p class="file-name">{file.name}</p>
+					</div>
+				{/if}
+			{/each}
+			{#if Object.keys(receivingFileDetails).length !== 0}
+				<div class="file-icon" aria-busy="true">
+					<p class="file-name">{receivingFileDetails.name ?? "file"}</p>
 				</div>
 			{/if}
-		{/each}
-		{#if Object.keys(receivingFileDetails).length !== 0}
-			<div class="file-icon" aria-busy="true">
-				<p class="file-name">{receivingFileDetails.name ?? "file"}</p>
-			</div>
-		{/if}
-
+		</div>
 		<footer>
 			<button class="secondary" on:click={closeModal}> Cancel </button>
 			<button on:click={downloadFiles}>Download All</button>
@@ -79,4 +81,8 @@
 	.file-name {
 		font-size: 14px;
 	}
+  .receivedFile{
+    margin-top: 5px;
+    margin-left: 5px;
+  }
 </style>
