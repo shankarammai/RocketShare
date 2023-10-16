@@ -1,8 +1,7 @@
 <script lang="ts">
 	import ColorSwitchButton from "./ColorSwitchButton.svelte";
-    import Logo from '../assets/logo.png';
+	import Logo from "../assets/logo2.png";
 </script>
-
 <nav>
 	<ul>
 		<li>
@@ -13,12 +12,17 @@
 		<li>
 			<ColorSwitchButton />
 		</li>
-		<li><a href="https://shankarammai.github.io/RocketShare" class="secondary"><i class="bi bi-github"></i></a></li>
+		<li>
+			<a href="https://github.com/shankarammai/RocketShare" class="secondary"
+				><i class="bi bi-github" /></a
+			>
+		</li>
 	</ul>
 </nav>
+
 <style>
-    img{
-        width: 6rem;
-        height: 5rem;
-    }
+	img {
+		width: 6rem;
+		height: 5rem;
+	}
 </style>

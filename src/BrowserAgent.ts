@@ -13,6 +13,5 @@ export function getBrowserName(): string {
     } else if (userAgent.indexOf("Edge") > -1) {
       browserName = "Microsoft Edge";
     }
-  
     return browserName;
   }

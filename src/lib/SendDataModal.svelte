@@ -23,10 +23,11 @@
 			<button
 				on:click={() => {
 					sendData(files);
+					console.log("is sending data", isSending);
 				}}>Send Files</button
 			>
 			{#if isSending}
-				<button aria-busy="true" aria-label="Sending..." />
+				<p>Sending...</p>
 			{/if}
 		</footer>
 	</article>

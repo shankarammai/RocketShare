@@ -177,7 +177,14 @@
 			{/each}
 		{/if}
 	</div>
-	<User self={true} userName={myName} userAgent={myBrowser} />
+	<div>
+		<User
+			self={true}
+			userName={myName}
+			userAgent={myBrowser}
+			bind:showReceiveModal
+		/>
+	</div>
 	{#if showSendModal}
 		<SendDataModal bind:show={showSendModal} bind:isSending />
 	{/if}
@@ -192,6 +199,16 @@
 </main>
 
 <style>
+	:global(html[data-theme="light"] > *),
+	:global([data-theme="light"]) {
+		--pico-background-color: aliceblue;
+		--pico-color: #1d3040;
+	}
+	:global(html[data-theme="dark"] > *),
+	:global([data-theme="light"]) {
+		--pico-background-color: #1d3040;
+		--pico-color: #bfc2c7;
+	}
 	main {
 		margin-left: 2rem;
 		margin-right: 2rem;

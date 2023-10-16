@@ -1,13 +1,13 @@
 interface StoredDataItem {
-    id:string,
-    agent:string,
-    name:string
+    id: string,
+    agent: string,
+    name: string
 }
 
 interface FileDetails {
-    type?:string,
-    name?:string,
-    sendType?:string,
+    type?: string,
+    name?: string,
+    sendType?: string,
     Totalsize?: number
 }
 
