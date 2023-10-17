@@ -23,7 +23,6 @@
 			<button
 				on:click={() => {
 					sendData(files);
-					console.log("is sending data", isSending);
 				}}>Send Files</button
 			>
 			{#if isSending}

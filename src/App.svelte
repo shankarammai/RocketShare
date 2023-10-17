@@ -16,6 +16,9 @@
 	import { getBrowserName } from "./BrowserAgent";
 	import SendDataModal from "./lib/SendDataModal.svelte";
 	import ReceiveDataModal from "./lib/ReceiveDataModal.svelte";
+	import FileSent from './assets/FileSent.mp3'
+	import FileReceived from './assets/FileReceived.mp3'
+
 
 	let myNanoId = nanoid(10);
 	let myPublicIP = "";
@@ -31,12 +34,16 @@
 	let currentReceivingFile: Array<any> = [];
 	let currentReceivingFileDetails: FileDetails = {};
 	let isSending: boolean = false;
+	let fileReceivedSound: HTMLAudioElement;
+	let fileSentSound: HTMLAudioElement;
+
 
 	setContext("peerFunctions", { sendData });
 
 	//send
 	function sendData(files: FileList) {
 		isSending = true;
+		console.log("is sending data", isSending);
 		let conn = myPeer.connect(friendPeerId);
 		conn.on("open", function () {
 			console.log("connection open");
@@ -65,6 +72,8 @@
 					}
 					// Send end message
 					conn.send({ sendType: "sendDone" });
+					showSendModal = false;
+					fileSentSound.play();
 				});
 			}
 		});
@@ -91,6 +100,7 @@
 					receivedFiles = newReceivedFiles;
 					currentReceivingFile = [];
 					currentReceivingFileDetails = {};
+					fileReceivedSound.play();
 				}
 				if (data.sendType === "sendStart") {
 					showReceiveModal = true;
@@ -196,6 +206,9 @@
 			bind:receivingFileDetails={currentReceivingFileDetails}
 		/>
 	{/if}
+	<audio src={FileReceived} bind:this={fileReceivedSound}></audio>
+	<audio src={FileSent} bind:this={fileSentSound}></audio>
+
 </main>
 
 <style>
